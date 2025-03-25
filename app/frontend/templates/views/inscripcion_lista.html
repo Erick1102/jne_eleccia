@@ -1,0 +1,183 @@
+{% extends "index.html" %}
+
+{% block resultado_analisis %}
+<!-- Panel de resumen -->
+<div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Validación</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <span class="text-3xl font-bold text-blue-700">{{ total_requisitos }}</span>
+            <p class="text-sm text-blue-700 mt-1">Total Requisitos</p>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4 text-center">
+            <span id="requisitosCompletos" class="text-3xl font-bold text-green-700">{{ requisitos_cumplidos }}</span>
+            <p class="text-sm text-green-700 mt-1">Requisitos Cumplidos</p>
+        </div>
+        <div class="bg-red-50 rounded-lg p-4 text-center">
+            <span id="requisitosFaltantes" class="text-3xl font-bold text-red-700">{{ requisitos_faltantes }}</span>
+            <p class="text-sm text-red-700 mt-1">Requisitos Faltantes</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <span class="text-3xl font-bold text-yellow-700">{{ porcentaje_cumplimiento }}%</span>
+            <p class="text-sm text-yellow-700 mt-1">Nivel de Cumplimiento</p>
+        </div>
+    </div>
+    
+    {% if mensaje_alerta %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700">
+                    <strong>Importante:</strong> {{ mensaje_alerta }}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="flex justify-between mt-4">
+        <button type="button" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+            Descargar informe completo
+        </button>
+        
+        <button type="button" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Notificar al personero legal
+        </button>
+    </div>
+</div>
+
+<!-- Recomendacion de Resolución -->
+<div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Recomendación de Resolución</h3>
+    <div id="recomendacionResolucion" class="bg-blue-50 p-4 rounded-lg">
+        <p class="text-blue-800">El sistema recomienda generar una <strong id="tipoResolucionRecomendada">{{ tipo_resolucion }}</strong> basada en el análisis de los documentos presentados.</p>
+        <p class="text-blue-700 mt-2 text-sm">Motivo: <span id="motivoResolucion">{{ motivo_resolucion }}</span></p>
+    </div>
+</div>
+
+<!-- Tabs para las categorías de requisitos -->
+<div class="bg-white rounded-lg shadow-md max-w-5xl mx-auto mb-6">
+    <div class="border-b border-gray-200">
+        <ul class="flex overflow-x-auto" id="requisitos-tabs" role="tablist">
+            {% for tab in tabs %}
+            <li class="mr-2">
+                <button class="inline-block p-4 {% if loop.first %}text-jne-red border-b-2 border-jne-red active{% else %}text-gray-500 hover:text-gray-700 border-b-2 border-transparent{% endif %}" 
+                    id="{{ tab.id }}-tab" 
+                    data-tabs-target="#{{ tab.id }}" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="{{ tab.id }}" 
+                    aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                    {{ tab.nombre }}
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div id="requisitosTabContent">
+        {% for tab in tabs %}
+        <div class="{% if not loop.first %}hidden {% endif %}p-4 rounded-lg" id="{{ tab.id }}" role="tabpanel" aria-labelledby="{{ tab.id }}-tab">
+            <h4 class="font-semibold text-gray-800 mb-4">{{ tab.nombre }}</h4>
+            
+            <div class="space-y-4">
+                {% for requisito in tab.requisitos %}
+                <div class="border rounded-lg p-4 bg-{{ requisito.estado_color }}-50">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-0.5">
+                            {% if requisito.estado == 'cumple' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {% elif requisito.estado == 'no_cumple' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {% else %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <div class="flex justify-between">
+                                <h5 class="text-sm font-medium text-gray-800">{{ requisito.nombre }}</h5>
+                                <span class="text-xs bg-{{ requisito.estado_color }}-100 text-{{ requisito.estado_color }}-800 px-2 py-1 rounded-full">
+                                    {{ requisito.estado_texto }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-1">{{ requisito.descripcion }}</p>
+                            
+                            {% if requisito.observacion %}
+                            <div class="mt-2 bg-{{ requisito.estado_color }}-100 p-2 rounded text-xs text-{{ requisito.estado_color }}-800">
+                                <p><strong>Observación:</strong> {{ requisito.observacion }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-2 flex justify-between items-center">
+                                <span class="text-xs text-gray-500">{{ requisito.metodo_validacion }}</span>
+                                <button class="text-xs text-blue-600 hover:underline">{{ requisito.boton_accion }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Botones de acción final -->
+<div class="flex justify-center mt-6 mb-8 space-x-4">
+    <button class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow-sm transition-colors">
+        Guardar Borrador
+    </button>
+    <button class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm transition-colors">
+        Generar Proyecto de Resolución
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Funcionalidad de tabs
+    const tabButtons = document.querySelectorAll('[data-tabs-target]');
+    const tabContents = document.querySelectorAll('[role="tabpanel"]');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const target = document.querySelector(button.dataset.tabsTarget);
+            
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            tabButtons.forEach(btn => {
+                btn.classList.remove('text-jne-red', 'border-jne-red');
+                btn.classList.add('text-gray-500', 'border-transparent');
+                btn.setAttribute('aria-selected', false);
+            });
+            
+            button.classList.remove('text-gray-500', 'border-transparent');
+            button.classList.add('text-jne-red', 'border-jne-red');
+            button.setAttribute('aria-selected', true);
+            
+            target.classList.remove('hidden');
+        });
+    });
+</script>
+
+{% endblock %}

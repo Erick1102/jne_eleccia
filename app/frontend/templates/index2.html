@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación de Inscripción de Listas - ELECCIA</title>
+    <script src="/static/js/tailwindcss_3.4.16.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jne-orange': '#F89E2B',
+                        'jne-red': '#DB252F',
+                        'jne-gold': '#A0936A',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar superior -->
+    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <img src="/static/img/jne.png" alt="JNE Logo" class="h-12">
+                <div class="ml-2 hidden sm:block">
+                    <h1 class="text-jne-red font-bold text-xl">JNE</h1>
+                    <p class="text-gray-600 text-xs">Jurado Nacional de Elecciones</p>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-jne-red">ELECCIA</h1>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Sección del título y descripción -->
+        <div class="text-center mb-6">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Generador de Proyectos de Resolución</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">Este sistema analiza los documentos ingresados para generar proyectos de resolución para procesos jurisdiccionales.</p>
+        </div>
+
+        <!-- Tarjeta de expediente -->
+        <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-8">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">Expediente</h3>
+                    <p class="text-sm text-gray-600">Ingrese el número de expediente para proceder con el análisis</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                        Pendiente de análisis
+                    </span>
+                </div>
+            </div>
+
+            <!-- Formulario del expediente -->
+            <form id="expedienteForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="expedienteNum" class="block text-sm font-medium text-gray-700 mb-1">Número de Expediente</label>
+                        <input 
+                            type="text" 
+                            id="expedienteNum" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none" 
+                            placeholder="Ej: 0025-2023-JNE"
+                        >
+                    </div>
+                    <div>
+                        <label for="tipoProcesoSelect" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Proceso</label>
+                        <select 
+                            id="tipoProcesoSelect" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                            <option value="">Seleccione un tipo</option>
+                            <option value="2">Apelación</option>
+                            <option value="1">Inscripción de Lista</option>
+                            <option value="3">Nulidad</option>
+                            <option value="4">Tacha</option>
+                            <option value="5">Vacancia</option>
+                        </select>
+                    </div>
+                    <div class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Resolución</label>
+                        <div id="tipoResolucionResult" class="w-full border border-gray-300 bg-gray-50 rounded-lg px-4 py-2 text-gray-600">
+                            Pendiente de análisis
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button 
+                        type="button" 
+                        id="btnAnalizar" 
+                        class="px-6 py-2 bg-jne-red hover:bg-red-700 text-white rounded-lg shadow-sm flex items-center justify-center transition-colors"
+                    >
+                        <span>Analizar Expediente</span>
+                        <div id="spinner" class="hidden ml-2">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sección de resultado del análisis (inicialmente oculta) -->
+        <div id="resultadoAnalisis" class="hidden">
+            <!-- Panel de resumen -->
+            <div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Validación</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <span class="text-3xl font-bold text-blue-700">28</span>
+                        <p class="text-sm text-blue-700 mt-1">Total Requisitos</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <span id="requisitosCompletos" class="text-3xl font-bold text-green-700">21</span>
+                        <p class="text-sm text-green-700 mt-1">Requisitos Cumplidos</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <span id="requisitosFaltantes" class="text-3xl font-bold text-red-700">7</span>
+                        <p class="text-sm text-red-700 mt-1">Requisitos Faltantes</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <span class="text-3xl font-bold text-yellow-700">75%</span>
+                        <p class="text-sm text-yellow-700 mt-1">Nivel de Cumplimiento</p>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Importante:</strong> Faltan requisitos críticos para la inscripción. Se recomienda subsanar las observaciones a la brevedad posible.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between mt-4">
+                    <button type="button" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                        Descargar informe completo
+                    </button>
+                    
+                    <button type="button" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Notificar al personero legal
+                    </button>
+                </div>
+            </div>
+            <!-- Recomendacion de Resolución -->
+            <div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Recomendación de Resolución</h3>
+                <div id="recomendacionResolucion" class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-blue-800">El sistema recomienda generar una <strong id="tipoResolucionRecomendada">Resolución de Inadmisibilidad</strong> basada en el análisis de los documentos presentados.</p>
+                    <p class="text-blue-700 mt-2 text-sm">Motivo: <span id="motivoResolucion">Incumplimiento de requisitos formales que pueden ser subsanados.</span></p>
+                </div>
+            </div>
+            
+            <!-- Tabs para las categorías de requisitos -->
+            <div class="bg-white rounded-lg shadow-md max-w-5xl mx-auto mb-6">
+                <div class="border-b border-gray-200">
+                    <ul class="flex overflow-x-auto" id="requisitos-tabs" role="tablist">
+                        <li class="mr-2">
+                            <button class="inline-block p-4 text-jne-red border-b-2 border-jne-red active" id="solicitud-tab" data-tabs-target="#solicitud" type="button" role="tab" aria-controls="solicitud" aria-selected="true">
+                                Solicitud de Inscripción
+                            </button>
+                        </li>
+                        <li class="mr-2">
+                            <button class="inline-block p-4 text-gray-500 hover:text-gray-700 border-b-2 border-transparent" id="eleccion-tab" data-tabs-target="#eleccion" type="button" role="tab" aria-controls="eleccion" aria-selected="false">
+                                Elección Interna
+                            </button>
+                        </li>
+                        <li class="mr-2">
+                            <button class="inline-block p-4 text-gray-500 hover:text-gray-700 border-b-2 border-transparent" id="designacion-tab" data-tabs-target="#designacion" type="button" role="tab" aria-controls="designacion" aria-selected="false">
+                                Designación Directa
+                            </button>
+                        </li>
+                        <li class="mr-2">
+                            <button class="inline-block p-4 text-gray-500 hover:text-gray-700 border-b-2 border-transparent" id="candidatos-tab" data-tabs-target="#candidatos" type="button" role="tab" aria-controls="candidatos" aria-selected="false">
+                                Información de Candidatos
+                            </button>
+                        </li>
+                        <li>
+                            <button class="inline-block p-4 text-gray-500 hover:text-gray-700 border-b-2 border-transparent" id="plan-tab" data-tabs-target="#plan" type="button" role="tab" aria-controls="plan" aria-selected="false">
+                                Plan de Gobierno y Tasa
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div id="requisitosTabContent">
+                    <!-- Tab Solicitud de Inscripción -->
+                    <div class="p-4 rounded-lg" id="solicitud" role="tabpanel" aria-labelledby="solicitud-tab">
+                        <h4 class="font-semibold text-gray-800 mb-4">Solicitud de Inscripción</h4>
+                        
+                        <div class="space-y-4">
+                            <!-- Requisito 1 -->
+                            <div class="border rounded-lg p-4 bg-green-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <div class="flex justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800">Formulario de solicitud firmado</h5>
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Cumple</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">El formulario de solicitud de inscripción de lista de candidatos está firmado por todos los candidatos y el personero legal.</p>
+                                        <div class="mt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">Verificado con firma digital</span>
+                                            <button class="text-xs text-blue-600 hover:underline">Ver documento</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Requisito 2 -->
+                            <div class="border rounded-lg p-4 bg-red-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <div class="flex justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800">Cuota joven</h5>
+                                            <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">No cumple</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">La lista de candidatos no cumple con la cuota joven requerida (mínimo 20%).</p>
+                                        <div class="mt-2 bg-red-100 p-2 rounded text-xs text-red-800">
+                                            <p><strong>Observación:</strong> Se necesita incluir al menos 2 candidatos adicionales entre 18 y 29 años.</p>
+                                        </div>
+                                        <div class="mt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">Validado automáticamente</span>
+                                            <button class="text-xs text-blue-600 hover:underline">Ver detalles</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Elección Interna (oculto inicialmente) -->
+                    <div class="hidden p-4 rounded-lg" id="eleccion" role="tabpanel" aria-labelledby="eleccion-tab">
+                        <h4 class="font-semibold text-gray-800 mb-4">Elección Interna</h4>
+                        
+                        <div class="space-y-4">
+                            <!-- Requisito 1 -->
+                            <div class="border rounded-lg p-4 bg-green-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <div class="flex justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800">Acta de elección interna - Candidatos</h5>
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Cumple</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">El acta de elección interna presentada cumple con los candidatos elegidos o designados, y estos corresponden a los presentados en la solicitud.</p>
+                                        <div class="mt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">Verificado con SIJE</span>
+                                            <button class="text-xs text-blue-600 hover:underline">Ver documento</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Requisito 2 -->
+                            <div class="border rounded-lg p-4 bg-yellow-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <div class="flex justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800">Modalidad de elección interna</h5>
+                                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Requiere revisión</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">El acta de elección interna ha señalado la modalidad empleada, pero se requiere verificación manual del documento.</p>
+                                        <div class="mt-2 bg-yellow-100 p-2 rounded text-xs text-yellow-800">
+                                            <p><strong>Observación:</strong> La modalidad señalada no coincide con la permitida en el estatuto de la organización.</p>
+                                        </div>
+                                        <div class="mt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">Validación mixta</span>
+                                            <button class="text-xs text-blue-600 hover:underline">Ver documento</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Requisito 3 -->
+                            <div class="border rounded-lg p-4 bg-green-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <div class="flex justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800">Orden de lista</h5>
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Cumple</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">La lista presentada coincide con el orden de la lista consignada en el acta de elección interna.</p>
+                                        <div class="mt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">Verificado automáticamente</span>
+                                            <button class="text-xs text-blue-600 hover:underline">Ver comparación</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenido para otras pestañas se manejaría de manera similar -->
+                </div>
+            </div>
+            
+            <!-- Botones de acción final -->
+            <div class="flex justify-center mt-6 mb-8 space-x-4">
+                <button class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow-sm transition-colors">
+                    Guardar Borrador
+                </button>
+                <button class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm transition-colors">
+                    Generar Proyecto de Resolución
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <img src="/static/img/jne.png" alt="JNE Logo" class="h-10">
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="text-sm">© 2025 Jurado Nacional de Elecciones - ELECCIA</p>
+                    <p class="text-xs text-gray-400 mt-1">Sistema de validación de inscripción de listas</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Botón para analizar expediente
+        document.getElementById('btnAnalizar').addEventListener('click', function() {
+            const spinner = document.getElementById('spinner');
+            spinner.classList.remove('hidden');
+            
+            // Simulación de análisis con LLM
+            setTimeout(function() {
+                spinner.classList.add('hidden');
+                document.getElementById('resultadoAnalisis').classList.remove('hidden');
+                
+                // Analizar documentos y determinar tipo de resolución
+                analizarDocumentos();
+                
+                // Scroll suave a la sección de resultados
+                document.getElementById('resultadoAnalisis').scrollIntoView({ behavior: 'smooth' });
+            }, 1500);
+        });
+        // Función para analizar documentos con LLM (simulado)
+        function analizarDocumentos() {
+            // En un caso real, aquí llamarías a tu API de LLM
+            const requisitosCompletos = 21;
+            const requisitosFaltantes = 7;
+            const porcentajeCumplimiento = 75;
+            
+            // Actualizar contadores de requisitos
+            document.getElementById('requisitosCompletos').textContent = requisitosCompletos;
+            document.getElementById('requisitosFaltantes').textContent = requisitosFaltantes;
+            
+            // Determinar tipo de resolución basado en análisis
+            let tipoResolucion, motivoResolucion;
+            
+            if (porcentajeCumplimiento < 50) {
+                tipoResolucion = "Resolución de Improcedencia";
+                motivoResolucion = "Incumplimiento crítico de requisitos esenciales que no pueden ser subsanados.";
+            } else if (porcentajeCumplimiento >= 50 && porcentajeCumplimiento < 90) {
+                tipoResolucion = "Resolución de Inadmisibilidad";
+                motivoResolucion = "Incumplimiento de requisitos formales que pueden ser subsanados en un plazo de 2 días hábiles.";
+            } else {
+                tipoResolucion = "Resolución de Admisión";
+                motivoResolucion = "Cumple con todos los requisitos esenciales para la inscripción.";
+            }
+            
+            // Actualizar resultados en la interfaz
+            document.getElementById('tipoResolucionResult').textContent = tipoResolucion;
+            document.getElementById('tipoResolucionRecomendada').textContent = tipoResolucion;
+            document.getElementById('motivoResolucion').textContent = motivoResolucion;
+            
+            // Generar observaciones específicas de cada requisito (simulado)
+            generarObservacionesRequisitos();
+        }
+
+        // Función para generar observaciones específicas
+        function generarObservacionesRequisitos() {
+            // En un caso real, esto vendría del análisis del LLM
+            // Ejemplo de observación generada automáticamente
+            const observacionCuotaJoven = document.querySelector('#solicitud .bg-red-100 p');
+            observacionCuotaJoven.innerHTML = "<strong>Observación:</strong> Se necesita incluir al menos 2 candidatos adicionales entre 18 y 29 años. El análisis detectó que solo el 15% de candidatos cumple con esta cuota, cuando el mínimo requerido es 20% según Ley N° 31030.";
+            
+            // Puedes agregar más observaciones específicas aquí
+        }
+        
+        // Funcionalidad de tabs
+        const tabButtons = document.querySelectorAll('[data-tabs-target]');
+        const tabContents = document.querySelectorAll('[role="tabpanel"]');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const target = document.querySelector(button.dataset.tabsTarget);
+                
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('text-jne-red', 'border-jne-red');
+                    btn.classList.add('text-gray-500', 'border-transparent');
+                    btn.setAttribute('aria-selected', false);
+                });
+                
+                button.classList.remove('text-gray-500', 'border-transparent');
+                button.classList.add('text-jne-red', 'border-jne-red');
+                button.setAttribute('aria-selected', true);
+                
+                target.classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

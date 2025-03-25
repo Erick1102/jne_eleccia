@@ -1,13 +1,149 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Consulta de Expedientes</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default('Validación de Inscripción de Listas - ELECCIA') }}</title>
+    <script src="/static/js/tailwindcss_3.4.16.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jne-orange': '#F89E2B',
+                        'jne-red': '#DB252F',
+                        'jne-gold': '#A0936A',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <h1>Ingrese un número de expediente</h1>
-    <form action="/expedientes/" method="get">
-        <input type="text" name="expediente_id" required>
-        <button type="submit">Consultar</button>
-    </form>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar superior -->
+    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <img src="/static/img/jne.png" alt="JNE Logo" class="h-12">
+                <div class="ml-2 hidden sm:block">
+                    <h1 class="text-jne-red font-bold text-xl">JNE</h1>
+                    <p class="text-gray-600 text-xs">Jurado Nacional de Elecciones</p>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-jne-red">ELECCIA</h1>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Sección del título y descripción -->
+        <div class="text-center mb-6">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Generador de Proyectos de Resolución</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">Este sistema analiza los documentos ingresados para generar proyectos de resolución para procesos jurisdiccionales.</p>
+        </div>
+
+        <!-- Tarjeta de expediente -->
+        <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto mb-8">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">Expediente</h3>
+                    <p class="text-sm text-gray-600">Ingrese el número de expediente para proceder con el análisis</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                        Pendiente de análisis
+                    </span>
+                </div>
+            </div>
+
+            <!-- Formulario del expediente -->
+            <form id="expedienteForm" class="space-y-6" method="post" action="/analiza_expediente">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="num_expediente" class="block text-sm font-medium text-gray-700 mb-1">Número de Expediente</label>
+                        <input 
+                            type="text" 
+                            id="num_expediente"
+                            name="num_expediente" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none" 
+                            placeholder="Ej: 0025-2023-JNE"
+                        >
+                    </div>
+                    <div>
+                        <label for="tipo_expediente" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Expediente</label>
+                        <select 
+                            id="tipo_expediente"
+                            name = "tipo_expediente" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                            <option value="">Seleccione un tipo</option>
+                            <option value="2">Acta Electoral</option>
+                            <option value="1">Inscripción de Lista</option>
+                            <option value="3">Publicidad Estatal</option>
+                            <option value="4">Propaganda Electoral</option>
+                            <option value="5">Nulidad Electoral</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tipo_materia" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Materia</label>
+                        <select 
+                            id="tipo_materia"
+                            name = "tipo_materia" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                            <option value="">Seleccione un tipo</option>
+                            <option value="2">Apelación</option>
+                            <option value="1">Solicitud Inscripción de Lista</option>
+                            <option value="3">Nulidad</option>
+                            <option value="4">Tacha</option>
+                            <option value="5">Vacancia</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button 
+                        type="submit" 
+                        id="btnAnalizar" 
+                        class="px-6 py-2 bg-jne-red hover:bg-red-700 text-white rounded-lg shadow-sm flex items-center justify-center transition-colors"
+                    >
+                        <span>Analizar Expediente</span>
+                        <div id="spinner" class="hidden ml-2">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sección de resultado del análisis (inicialmente oculta) -->
+        <div id="resultadoAnalisis" class="{% if not analisis_realizado %}hidden{% endif %}">
+            {% block resultado_analisis %}
+            <!-- Esta sección será reemplazada por cada tipo de proceso -->
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <img src="/static/img/jne.png" alt="JNE Logo" class="h-10">
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="text-sm">© 2025 Jurado Nacional de Elecciones - ELECCIA</p>
+                    <p class="text-xs text-gray-400 mt-1">Sistema de validación de inscripción de listas</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+
+    </script>
+
 </body>
 </html>

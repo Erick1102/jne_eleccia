@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Resoluciones - ELECCIA</title>
+    <script src="/static/js/tailwindcss_3.4.16.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jne-orange': '#F89E2B',
+                        'jne-red': '#DB252F',
+                        'jne-gold': '#A0936A',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar superior -->
+    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <img src="/static/img/jne.png" alt="JNE Logo" class="h-12">
+                <div class="ml-2 hidden sm:block">
+                    <h1 class="text-jne-red font-bold text-xl">JNE</h1>
+                    <p class="text-gray-600 text-xs">Jurado Nacional de Elecciones</p>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-jne-red">ELECCIA</h1>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Sección del título y descripción -->
+        <div class="text-center mb-6">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Dashboard de Resoluciones</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">Consulta y gestiona todas las resoluciones procesadas en el sistema.</p>
+        </div>
+
+        <!-- Tarjeta de filtros -->
+        <div class="bg-white rounded-lg shadow-md p-6 max-w-6xl mx-auto mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros de búsqueda</h3>
+            
+            <form id="filtrosForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="num_expediente" class="block text-sm font-medium text-gray-700 mb-1">Número de Expediente</label>
+                        <input 
+                            type="text" 
+                            id="num_expediente"
+                            name="num_expediente" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none" 
+                            placeholder="Ej: 0025-2023-JNE"
+                        >
+                    </div>
+                    <div>
+                        <label for="tipo_proceso" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Proceso</label>
+                        <select 
+                            id="tipo_proceso"
+                            name="tipo_proceso" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                            <option value="">Todos</option>
+                            <option value="ordinario">Inscripción de Lista</option>
+                            <option value="sumario">Publicidad Estatal</option>
+                            <option value="especial">Acta Electoral</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="materia" class="block text-sm font-medium text-gray-700 mb-1">Materia</label>
+                        <select 
+                            id="materia"
+                            name="materia" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                            <option value="">Todas</option>
+                            <option value="1">Solicitud de Inscripción</option>
+                            <option value="2">Apelación</option>
+                            <option value="3">Nulidad</option>
+                            <option value="4">Tacha</option>
+                            <option value="5">Vacancia</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="fecha_desde" class="block text-sm font-medium text-gray-700 mb-1">Fecha desde</label>
+                        <input 
+                            type="date" 
+                            id="fecha_desde"
+                            name="fecha_desde" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                    </div>
+                    <div>
+                        <label for="fecha_hasta" class="block text-sm font-medium text-gray-700 mb-1">Fecha hasta</label>
+                        <input 
+                            type="date" 
+                            id="fecha_hasta"
+                            name="fecha_hasta" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                    </div>
+                    <div>
+                        <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                        <select 
+                            id="estado"
+                            name="estado" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
+                        >
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente de revisión</option>
+                            <option value="en_revision">En revisión</option>
+                            <option value="resuelto">Resolución generada</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-jne-red hover:bg-red-700 text-white rounded-lg shadow-sm transition-colors flex items-center"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de resoluciones -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden max-w-6xl mx-auto mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Listado de resoluciones</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expediente</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo Proceso</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Ingreso</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Ejemplos de filas de datos -->
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">0025-2023-JNE</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Inscripción de Lista</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Solicitud de Inscripción</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15/03/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">carlos.mendoza</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Resolución generada
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex space-x-2">
+                                    <a href="/analisis/0025-2023-JNE" class="text-blue-600 hover:text-blue-900">Ver análisis</a>
+                                    <a href="/descargar/0025-2023-JNE" class="text-green-600 hover:text-green-900">Descargar</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">0031-2023-JNE</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Inscripción de Lista</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Apelación</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">16/03/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">maria.lopez</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    En revisión
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex space-x-2">
+                                    <a href="/analisis/0031-2023-JNE" class="text-blue-600 hover:text-blue-900">Ver análisis</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">0042-2023-JNE</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Inscripción de Lista</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Nulidad</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">17/03/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">juan.perez</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Pendiente de revisión
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex space-x-2">
+                                    <a href="/analisis/0042-2023-JNE" class="text-blue-600 hover:text-blue-900">Ver análisis</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Fin de ejemplos -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginación -->
+            <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Anterior
+                    </a>
+                    <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Siguiente
+                    </a>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Mostrando <span class="font-medium">1</span> a <span class="font-medium">10</span> de <span class="font-medium">47</span> resultados
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Paginación">
+                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Anterior</span>
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            <a href="#" aria-current="page" class="z-10 bg-jne-red border-jne-red text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                1
+                            </a>
+                            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                2
+                            </a>
+                            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                3
+                            </a>
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+                            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                5
+                            </a>
+                            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Siguiente</span>
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <img src="/static/img/jne.png" alt="JNE Logo" class="h-10">
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="text-sm">© 2025 Jurado Nacional de Elecciones - ELECCIA</p>
+                    <p class="text-xs text-gray-400 mt-1">Sistema de validación de inscripción de listas</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('filtrosForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Aquí iría el código para enviar la petición al backend
+            console.log('Enviando filtros para búsqueda');
+            
+            // Ejemplo de cómo obtener los valores de los filtros
+            const filtros = {
+                expediente: document.getElementById('num_expediente').value,
+                tipo_proceso: document.getElementById('tipo_proceso').value,
+                materia: document.getElementById('materia').value,
+                fecha_desde: document.getElementById('fecha_desde').value,
+                fecha_hasta: document.getElementById('fecha_hasta').value,
+                estado: document.getElementById('estado').value
+            };
+            
+            console.log('Filtros:', filtros);
+            
+            // Aquí se realizaría la petición fetch al backend y se actualizaría la tabla
+        });
+    </script>
+</body>
+</html>
