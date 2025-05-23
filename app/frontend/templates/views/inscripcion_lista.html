@@ -1,7 +1,54 @@
-{% extends "index.html" %}
+<script src="/static/js/tailwindcss_3.4.16.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'jne-orange': '#F89E2B',
+                    'jne-red': '#DB252F',
+                    'jne-gold': '#A0936A',
+                }
+            }
+        },        
+    }
+</script>
 
 {% block resultado_analisis %}
-<!-- Panel de resumen -->
+<!-- Información del Expediente -->
+<div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Información del Expediente</h3>
+            <p class="text-sm text-gray-600">Detalles del expediente analizado</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Analizado
+            </span>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-1">Número de Expediente</h4>
+            <p class="text-lg font-semibold text-gray-800">{{ nombre_expediente }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-1">Tipo de Expediente</h4>
+            <p class="text-lg font-semibold text-gray-800">{{ tipo_expediente }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-1">Materia</h4>
+            <p class="text-lg font-semibold text-gray-800">{{ materia }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- resumen de requisitos -->
 <div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
     <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Validación</h3>
     
@@ -40,34 +87,193 @@
         </div>
     </div>
     {% endif %}
-    
     <div class="flex justify-between mt-4">
-        <button type="button" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-            Descargar informe completo
-        </button>
-        
-        <button type="button" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            Notificar al personero legal
-        </button>
+        <div class="flex space-x-4">
+            <button type="button" id="btnVerInforme" class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Ver informe completo
+            </button>
+        </div>
+    </div>    
+</div>
+
+<!-- Modal de Informe Completo -->
+<div id="modalInforme" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Informe Completo del Expediente</h3>
+                <div class="flex items-center space-x-4">
+                    <button id="btnDescargarInforme" 
+                       class="text-jne-red hover:text-red-700 flex items-center text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Descargar informe
+                    </button>
+                    <button id="btnCerrarInforme" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Resumen de Requisitos -->
+            <div class="mb-6">
+                <h4 class="text-md font-semibold text-gray-700 mb-3">Resumen de Requisitos</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <span class="text-2xl font-bold text-blue-700">{{ total_requisitos }}</span>
+                        <p class="text-sm text-blue-700 mt-1">Total Requisitos</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <span class="text-2xl font-bold text-green-700">{{ requisitos_cumplidos }}</span>
+                        <p class="text-sm text-green-700 mt-1">Requisitos Cumplidos</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <span class="text-2xl font-bold text-red-700">{{ requisitos_faltantes }}</span>
+                        <p class="text-sm text-red-700 mt-1">Requisitos Faltantes</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <span class="text-2xl font-bold text-yellow-700">{{ porcentaje_cumplimiento }}%</span>
+                        <p class="text-sm text-yellow-700 mt-1">Nivel de Cumplimiento</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requisitos por Sección -->
+            <div class="mb-6">
+                <h4 class="text-md font-semibold text-gray-700 mb-3">Requisitos por Sección</h4>
+                {% for tab in tabs %}
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h5 class="text-sm font-medium text-gray-600">{{ tab.nombre }}</h5>
+                        {% if tab.id == 'hoja_vida_candidatos' %}
+                            {% set total_requisitos = 0 %}
+                            {% set requisitos_cumplidos = 0 %}
+                            {% for candidato in tab.candidatos %}
+                                {% if candidato.requisitos is defined %}
+                                    {% for requisito in candidato.requisitos %}
+                                        {% set total_requisitos = total_requisitos + 1 %}
+                                        {% if requisito.estado == 'CUMPLE' %}
+                                            {% set requisitos_cumplidos = requisitos_cumplidos + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                            <div class="flex items-center">
+                                <span class="text-sm font-medium {% if requisitos_cumplidos == total_requisitos and total_requisitos > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {{ requisitos_cumplidos }}/{{ total_requisitos }}
+                                </span>
+                            </div>
+                        {% else %}
+                            {% set total_requisitos = tab.requisitos|length %}
+                            {% set requisitos_cumplidos = tab.requisitos|selectattr('estado', 'equalto', 'CUMPLE')|list|length %}
+                            <div class="flex items-center">
+                                <span class="text-sm font-medium {% if requisitos_cumplidos == total_requisitos and total_requisitos > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {{ requisitos_cumplidos }}/{{ total_requisitos }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="space-y-2">
+                        {% if tab.id == 'hoja_vida_candidatos' %}
+                            {% for candidato in tab.candidatos %}
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="font-medium">{{ candidato.nombres }} {{ candidato.apellidos }}</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    {% for requisito in candidato.requisitos %}
+                                    <div class="flex justify-between items-center py-1">
+                                        <span>{{ requisito.nombre }}</span>
+                                        <span class="text-xs {% if requisito.estado == 'CUMPLE' %}text-green-600{% else %}text-red-600{% endif %}">
+                                            {{ requisito.estado_texto }}
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            {% for requisito in tab.requisitos %}
+                            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                <span class="text-sm">{{ requisito.nombre }}</span>
+                                <span class="text-xs {% if requisito.estado == 'CUMPLE' %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {{ requisito.estado_texto }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Descripción de la Resolución -->
+            <div class="mb-6">
+                <h4 class="text-md font-semibold text-gray-700 mb-3">Descripción de la Resolución</h4>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="mb-3">
+                        <h5 class="text-sm font-medium text-gray-600">Tipo de Resolución</h5>
+                        <p class="text-sm text-gray-800">{{ tipo_resolucion }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h5 class="text-sm font-medium text-gray-600">Motivo</h5>
+                        <p class="text-sm text-gray-800">{{ motivo_resolucion }}</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-medium text-gray-600">Análisis</h5>
+                        <div class="text-sm text-gray-800">{{ analisis_resolucion | safe }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Recomendacion de Resolución -->
+<!-- Recomendación de Resolución -->
 <div class="bg-white rounded-lg shadow-md p-6 max-w-5xl mx-auto mb-6">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">Recomendación de Resolución</h3>
+    <div class="flex items-center mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-jne-red mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-800">Recomendación de Resolución</h3>
+    </div>
+    
     <div id="recomendacionResolucion" class="bg-blue-50 p-4 rounded-lg">
-        <p class="text-blue-800">El sistema recomienda generar una <strong id="tipoResolucionRecomendada">{{ tipo_resolucion }}</strong> basada en el análisis de los documentos presentados.</p>
-        <p class="text-blue-700 mt-2 text-sm">Motivo: <span id="motivoResolucion">{{ motivo_resolucion }}</span></p>
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-jne-red mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-gray-700 text-sm">
+                    De acuerdo al análisis realizado, se recomienda emitir una 
+                    <span class="font-semibold text-jne-red">{{ tipo_resolucion }}</span> 
+                    para el presente expediente, considerando el cumplimiento de los requisitos establecidos y la normativa aplicable.
+                </p>
+            </div>
+        </div>
+        
+        <div class="mt-3 flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="ml-3">
+                <p class="text-blue-700 text-sm font-medium">Motivo:</p>
+                <p class="text-blue-700 text-sm mt-1" id="motivoResolucion">{{ motivo_resolucion }}</p>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Tabs para las categorías de requisitos -->
+<!-- categorias de requisitos -->
 <div class="bg-white rounded-lg shadow-md max-w-5xl mx-auto mb-6">
     <div class="border-b border-gray-200">
         <ul class="flex overflow-x-auto" id="requisitos-tabs" role="tablist">
@@ -89,7 +295,110 @@
     
     <div id="requisitosTabContent">
         {% for tab in tabs %}
-        <div class="{% if not loop.first %}hidden {% endif %}p-4 rounded-lg" id="{{ tab.id }}" role="tabpanel" aria-labelledby="{{ tab.id }}-tab">
+        <div class="{% if not loop.first %}hidden{% endif %} p-4 rounded-lg" id="{{ tab.id }}" role="tabpanel" aria-labelledby="{{ tab.id }}-tab">
+            {% if tab.id == 'hoja_vida_candidatos' %}
+            <h4 class="font-semibold text-gray-800 mb-4">{{ tab.nombre }}</h4>
+
+            <div class="space-y-4">
+                {% for candidato in tab.candidatos %}
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span class="text-lg font-semibold text-gray-600">{{ candidato.nombres[0] }}{{ candidato.apellidos[0] }}</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-lg font-semibold text-gray-800">{{ candidato.nombres }} {{ candidato.apellidos }}</h5>
+                            <p class="text-sm text-gray-600">{{ candidato.cargo }}</p>
+                            <p class="text-xs text-gray-500">DNI: {{ candidato.dni }}</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if candidato.cumple %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if candidato.cumple %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Cumple
+                                {% else %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                No Cumple
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>                   
+
+                    <div class="border-t border-gray-200 pt-4">
+                        <button class="accordion-header w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none" data-target="requisitos-{{ loop.index }}">
+                            <span>Requisitos Evaluados</span>
+                            <svg class="accordion-icon h-5 w-5 transform transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div id="requisitos-{{ loop.index }}" class="accordion-content hidden mt-4 space-y-4">
+                            {% for requisito in candidato.requisitos %}
+                            <div class="border rounded-lg p-4 bg-{{ requisito.estado_color }}-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        {% if requisito.estado == 'CUMPLE' %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {% elif requisito.estado == 'NO_CUMPLE' %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <div class="flex justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800">{{ requisito.nombre }}</h5>
+                                            <span class="text-xs bg-{{ requisito.estado_color }}-100 text-{{ requisito.estado_color }}-800 px-2 py-1 rounded-full">
+                                                {{ requisito.estado_texto }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1">{{ requisito.descripcion }}</p>
+                                        
+                                        {% if requisito.observacion %}
+                                        <div class="mt-2 bg-{{ requisito.estado_color }}-100 p-2 rounded text-xs text-{{ requisito.estado_color }}-800">
+                                            <p><strong>Observación:</strong> {{ requisito.observacion }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="mt-2 flex justify-between items-center">
+                                            <span class="text-xs text-gray-500">{{ requisito.metodo_validacion }}</span>
+                                            <div class="flex space-x-2">
+                                                {% if requisito.boton_accion %}
+                                                <a href="{{ requisito.boton_accion }}" target="_blank" class="text-xs text-blue-600 hover:underline">Ver Documento</a>
+                                                {% endif %}
+                                                <button 
+                                                    onclick="abrirModalEditarRequisito('{{ requisito.nombre }}', '{{ requisito.estado }}', '{{ requisito.observacion }}', '{{ requisito.id_estado_requisito }}')"
+                                                    class="text-xs text-jne-red hover:text-red-700 flex items-center"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                    Editar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
             <h4 class="font-semibold text-gray-800 mb-4">{{ tab.nombre }}</h4>
             
             <div class="space-y-4">
@@ -97,11 +406,11 @@
                 <div class="border rounded-lg p-4 bg-{{ requisito.estado_color }}-50">
                     <div class="flex items-start">
                         <div class="flex-shrink-0 mt-0.5">
-                            {% if requisito.estado == 'cumple' %}
+                            {% if requisito.estado == 'CUMPLE' %}
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {% elif requisito.estado == 'no_cumple' %}
+                            {% elif requisito.estado == 'NO_CUMPLE' %}
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -122,62 +431,1165 @@
                             
                             {% if requisito.observacion %}
                             <div class="mt-2 bg-{{ requisito.estado_color }}-100 p-2 rounded text-xs text-{{ requisito.estado_color }}-800">
-                                <p><strong>Observación:</strong> {{ requisito.observacion }}</p>
+                                <p><strong>Observación:</strong> {{ requisito.observacion | safe }}</p>
                             </div>
                             {% endif %}
                             
                             <div class="mt-2 flex justify-between items-center">
                                 <span class="text-xs text-gray-500">{{ requisito.metodo_validacion }}</span>
-                                <button class="text-xs text-blue-600 hover:underline">{{ requisito.boton_accion }}</button>
+                                <div class="flex space-x-2">
+                                    {% if requisito.boton_accion %}
+                                    <a href="{{ requisito.boton_accion }}" target="_blank" class="text-xs text-blue-600 hover:underline">Ver Documento</a>
+                                    {% endif %}
+                                    <button 
+                                        onclick="abrirModalEditarRequisito('{{ requisito.nombre }}', '{{ requisito.estado }}', '{{ requisito.observacion }}', '{{ requisito.id_estado_requisito }}')"
+                                        class="text-xs text-jne-red hover:text-red-700 flex items-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Editar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- Botones de acción final -->
+<!-- Botones -->
 <div class="flex justify-center mt-6 mb-8 space-x-4">
-    <button class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow-sm transition-colors">
-        Guardar Borrador
-    </button>
-    <button class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm transition-colors">
+    <div class="flex space-x-4">
+        <button id="btnHabilitarEdicion" class="px-6 py-3 bg-jne-red hover:bg-red-700 text-white rounded-lg shadow-sm transition-colors flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Habilitar Edición
+        </button>
+        <button id="btnCancelarEdicion" class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-sm transition-colors flex items-center hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Cancelar Edición
+        </button>
+    </div>
+    <button 
+        id="btnGenerarResolucion"
+        class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm transition-colors flex items-center"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
         Generar Proyecto de Resolución
     </button>
+</div>
+
+<!-- Modal de Confirmación -->
+<div id="modalConfirmacion" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Confirmar Generación de Resolución</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    ¿Está seguro que desea generar el proyecto de resolución? Esta acción no podrá ser revertida.
+                </p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button
+                    id="btnCancelar"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 mr-2"
+                >
+                    Cancelar
+                </button>
+                <button
+                    id="btnConfirmar"
+                    class="px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
+                >
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edición de Requisito -->
+<div id="modalEditarRequisito" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Editar Requisito</h3>
+                <button id="btnCerrarEditarRequisito" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="formEditarRequisito" class="space-y-4">
+                <input type="hidden" id="id_estado_requisito" name="id_estado_requisito">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre del Requisito</label>
+                    <p id="nombreRequisito" class="mt-1 text-sm text-gray-600"></p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Estado</label>
+                    <select id="estadoRequisito" name="estado" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-jne-red focus:border-jne-red sm:text-sm rounded-md">
+                        <option value="CUMPLE">Cumple</option>
+                        <option value="NO_CUMPLE">No Cumple</option>
+                        <option value="ALERTA">Alerta</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Observación</label>
+                    <textarea id="observacionRequisito" name="observacion" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-jne-red focus:border-jne-red sm:text-sm"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="btnCancelarEditarRequisito" class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-jne-red text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de Éxito -->
+<div id="toastExito" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out hidden">
+    <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Resolución generada exitosamente</span>
+    </div>
+</div>
+
+<!-- Toast de Error -->
+<div id="toastError" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out hidden">
+    <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span id="mensajeError">Error al generar la resolución</span>
+    </div>
+</div>
+
+<!-- Toast de Éxito -->
+<div id="toastExitoEdicion" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out hidden">
+    <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Requisito actualizado exitosamente</span>
+    </div>
+</div>
+
+<!-- Toast de Error -->
+<div id="toastErrorEdicion" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out hidden">
+    <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span id="mensajeErrorEdicion">Error al actualizar el requisito</span>
+    </div>
+</div>
+
+<!-- Modal de Normativas -->
+<div id="modalNormativas" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Normativas Aplicables</h3>
+                <div class="flex items-center space-x-4">
+                    <button id="btnCerrarNormativas" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs para Leyes y Reglamentos -->
+            <div class="border-b border-gray-200 mb-4">
+                <ul class="flex" id="normativas-tabs" role="tablist">
+                    <li class="mr-2">
+                        <button class="inline-block p-4 text-jne-red border-b-2 border-jne-red active" 
+                            id="leyes-tab" 
+                            data-tabs-target="#leyes" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="leyes" 
+                            aria-selected="true">
+                            Leyes
+                        </button>
+                    </li>
+                    <li class="mr-2">
+                        <button class="inline-block p-4 text-gray-500 hover:text-gray-700 border-b-2 border-transparent" 
+                            id="reglamentos-tab" 
+                            data-tabs-target="#reglamentos" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="reglamentos" 
+                            aria-selected="false">
+                            Reglamentos
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contenido de Leyes -->
+            <div id="leyes" class="space-y-4 max-h-96 overflow-y-auto" role="tabpanel" aria-labelledby="leyes-tab">
+                {% for ley in normativas[0] %}
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <input type="checkbox" 
+                                class="h-4 w-4 text-jne-red focus:ring-jne-red border-gray-300 rounded"
+                                data-normativa-id="{{ ley.nombre }}"
+                                data-tipo="ley">
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h4 class="text-sm font-medium text-gray-800">{{ ley.nombre }}</h4>
+                            <div class="mt-2 space-y-2">
+                                {% for articulo in ley.articulos %}
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-1">
+                                        <input type="checkbox" 
+                                            class="h-4 w-4 text-jne-red focus:ring-jne-red border-gray-300 rounded"
+                                            data-articulo-id="{{ articulo.id }}"
+                                            data-normativa-id="{{ ley.nombre }}">
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-xs text-gray-600">{{ articulo.seccion }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Contenido de Reglamentos -->
+            <div id="reglamentos" class="hidden space-y-4 max-h-96 overflow-y-auto" role="tabpanel" aria-labelledby="reglamentos-tab">
+                {% for reglamento in normativas[1] %}
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <input type="checkbox" 
+                                class="h-4 w-4 text-jne-red focus:ring-jne-red border-gray-300 rounded"
+                                data-normativa-id="{{ reglamento.nombre }}"
+                                data-tipo="reglamento">
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h4 class="text-sm font-medium text-gray-800">{{ reglamento.nombre }}</h4>
+                            {% if reglamento.numero %}
+                            <p class="text-xs text-gray-500">Número: {{ reglamento.numero }}</p>
+                            {% endif %}
+                            <div class="mt-2 space-y-2">
+                                {% for articulo in reglamento.articulos %}
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mt-1">
+                                        <input type="checkbox" 
+                                            class="h-4 w-4 text-jne-red focus:ring-jne-red border-gray-300 rounded"
+                                            data-articulo-id="{{ articulo.id }}"
+                                            data-normativa-id="{{ reglamento.nombre }}">
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-xs text-gray-600">{{ articulo.seccion }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="btnCancelarNormativas" 
+                    class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Cancelar
+                </button>
+                <button id="btnConfirmarNormativas"
+                    class="px-4 py-2 bg-jne-red text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                    Confirmar y Generar Resolución
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<!-- 
+
+-->
 <script>
-    // Funcionalidad de tabs
+    function initTabs() {
     const tabButtons = document.querySelectorAll('[data-tabs-target]');
+    const tabContents = document.querySelectorAll('[role="tabpanel"]');
+
+    if (tabButtons.length === 0 || tabContents.length === 0) return;
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const target = document.querySelector(button.dataset.tabsTarget);
+
+            tabContents.forEach(content => content.classList.add('hidden'));
+
+            tabButtons.forEach(btn => {
+                btn.classList.remove('text-jne-red', 'border-jne-red', 'active');
+                btn.classList.add('text-gray-500', 'border-transparent');
+                btn.setAttribute('aria-selected', 'false');
+            });
+
+            button.classList.remove('text-gray-500', 'border-transparent');
+            button.classList.add('text-jne-red', 'border-jne-red', 'active');
+            button.setAttribute('aria-selected', 'true');
+
+            target.classList.remove('hidden');
+        });
+    });
+}
+
+function initAccordions() {
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
+    
+    accordionHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            // Get the target content element
+            const targetId = header.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            
+            // Toggle the content visibility
+            content.classList.toggle('hidden');
+            
+            // Rotate the arrow icon
+            const icon = header.querySelector('.accordion-icon');
+            icon.classList.toggle('rotate-180');
+        });
+    });
+}
+
+// Agregar estilos de animación
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+    
+    @keyframes slideOut {
+        from { transform: translateX(0); }
+        to { transform: translateX(100%); }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .animate-slide-in {
+        animation: slideIn 0.3s ease-in-out;
+    }
+    
+    .animate-slide-out {
+        animation: slideOut 0.3s ease-in-out;
+    }
+`;
+document.head.appendChild(style);
+
+// Módulo de utilidades
+const Utils = {
+    showToast: (elementId, message, duration = 3000) => {
+        const toast = document.getElementById(elementId);
+        if (!toast) return;
+        
+        toast.classList.remove('hidden');
+        toast.classList.add('animate-slide-in');
+        
+        setTimeout(() => {
+            toast.classList.add('animate-slide-out');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('animate-slide-in', 'animate-slide-out');
+            }, 500);
+        }, duration);
+    },
+    
+    showErrorToast: (message) => {
+        const toast = document.getElementById('toastError');
+        const mensajeError = document.getElementById('mensajeError');
+        if (!toast || !mensajeError) return;
+        
+        mensajeError.textContent = message;
+        Utils.showToast('toastError');
+    },
+    
+    showSuccessToast: () => {
+        Utils.showToast('toastExito');
+    },
+    
+    setLoadingState: (button, isLoading, loadingText = 'Cargando...') => {
+        if (!button) return;
+        
+        if (isLoading) {
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                ${loadingText}
+            `;
+        } else {
+            button.disabled = false;
+            button.innerHTML = button.getAttribute('data-original-text') || 'Confirmar';
+        }
+    }
+};
+
+// Módulo de gestión de modales
+const ModalManager = {
+    show: (modalId) => {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('animate-fade-in');
+    },
+    
+    hide: (modalId) => {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        modal.classList.add('hidden');
+        modal.classList.remove('animate-fade-in');
+    }
+};
+
+// Módulo de gestión de normativas
+const NormativaManager = {
+    getSelectedNormativas: () => {
+        const normativasSeleccionadas = {
+            leyes: [],
+            reglamentos: []
+        };
+
+        document.querySelectorAll('input[data-tipo="ley"]:checked, input[data-tipo="reglamento"]:checked').forEach(checkbox => {
+            const normativaId = checkbox.dataset.normativaId;
+            const tipo = checkbox.dataset.tipo;
+            const articulos = Array.from(document.querySelectorAll(`input[data-normativa-id="${normativaId}"][data-articulo-id]:checked`))
+                .map(art => art.dataset.articuloId);
+            
+            normativasSeleccionadas[tipo === 'ley' ? 'leyes' : 'reglamentos'].push({
+                nombre: normativaId,
+                articulos: articulos
+            });
+        });
+
+        return normativasSeleccionadas;
+    },
+    
+    initCheckboxes: () => {
+        document.querySelectorAll('input[data-tipo="ley"], input[data-tipo="reglamento"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const normativaId = e.target.dataset.normativaId;
+                const isChecked = e.target.checked;
+                
+                document.querySelectorAll(`input[data-normativa-id="${normativaId}"]`).forEach(artCheckbox => {
+                    artCheckbox.checked = isChecked;
+                });
+            });
+        });
+
+        document.querySelectorAll('input[data-articulo-id]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const normativaId = e.target.dataset.normativaId;
+                const normativaCheckbox = document.querySelector(`input[data-normativa-id="${normativaId}"][data-tipo]`);
+                
+                const articulos = document.querySelectorAll(`input[data-normativa-id="${normativaId}"][data-articulo-id]`);
+                const todosSeleccionados = Array.from(articulos).every(art => art.checked);
+                
+                normativaCheckbox.checked = todosSeleccionados;
+            });
+        });
+    }
+};
+
+// Módulo de gestión de requisitos
+const RequisitoManager = {
+    cambiosTemporales: new Map(),
+    modoEdicion: false,
+    
+    actualizarInterfazEdicion: () => {
+        const btnHabilitarEdicion = document.getElementById('btnHabilitarEdicion');
+        const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+        const botonesEditar = document.querySelectorAll('button[onclick^="abrirModalEditarRequisito"]');
+        
+        if (RequisitoManager.modoEdicion) {
+            btnHabilitarEdicion.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Guardar Cambios
+            `;
+            btnHabilitarEdicion.classList.remove('bg-jne-red', 'hover:bg-red-700');
+            btnHabilitarEdicion.classList.add('bg-green-600', 'hover:bg-green-700');
+            btnCancelarEdicion.classList.remove('hidden');
+            botonesEditar.forEach(btn => btn.classList.remove('hidden'));
+        } else {
+            btnHabilitarEdicion.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Habilitar Edición
+            `;
+            btnHabilitarEdicion.classList.remove('bg-green-600', 'hover:bg-green-700');
+            btnHabilitarEdicion.classList.add('bg-jne-red', 'hover:bg-red-700');
+            btnCancelarEdicion.classList.add('hidden');
+            botonesEditar.forEach(btn => btn.classList.add('hidden'));
+        }
+    },
+    
+    guardarCambios: async () => {
+        try {
+            const formData = new FormData();
+            formData.append('id_expediente', '{{ id_expediente }}');
+            
+            for (const [id_estado_requisito, cambios] of RequisitoManager.cambiosTemporales) {
+                formData.append(`requisito_${id_estado_requisito}`, cambios.estado);
+                if (cambios.observacion) {
+                    formData.append(`observacion_${id_estado_requisito}`, cambios.observacion);
+                }
+            }
+            
+            const btnHabilitarEdicion = document.getElementById('btnHabilitarEdicion');
+            Utils.setLoadingState(btnHabilitarEdicion, true, 'Guardando...');
+            
+            const response = await fetch('/guardar_cambios_requisitos', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                // La redirección se manejará automáticamente por el servidor
+                window.location.href = response.url;
+            } else {
+                throw new Error('Error al guardar los cambios');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Utils.showErrorToast('Error al guardar los cambios');
+            const btnHabilitarEdicion = document.getElementById('btnHabilitarEdicion');
+            Utils.setLoadingState(btnHabilitarEdicion, false);
+        }
+    },
+    
+    actualizarVista: (responseData) => {
+        // Actualizar contadores
+        const requisitosCompletos = document.getElementById('requisitosCompletos');
+        const requisitosFaltantes = document.getElementById('requisitosFaltantes');
+        const totalRequisitos = document.querySelector('.text-3xl.font-bold.text-blue-700');
+        const porcentajeCumplimiento = document.querySelector('.text-3xl.font-bold.text-yellow-700');
+        
+        if (requisitosCompletos) requisitosCompletos.textContent = responseData.requisitos_cumplidos;
+        if (requisitosFaltantes) requisitosFaltantes.textContent = responseData.requisitos_faltantes;
+        if (totalRequisitos) totalRequisitos.textContent = responseData.total_requisitos;
+        if (porcentajeCumplimiento) porcentajeCumplimiento.textContent = `${responseData.porcentaje_cumplimiento}%`;
+        
+        // Actualizar mensaje de alerta
+        const mensajeAlerta = document.querySelector('.text-sm.text-yellow-700 strong');
+        if (mensajeAlerta) {
+            const mensaje = responseData.requisitos_faltantes > 0 
+                ? `Faltan ${responseData.requisitos_faltantes} requisitos por cumplir.`
+                : "Todos los requisitos aplicables han sido cumplidos satisfactoriamente.";
+            mensajeAlerta.nextSibling.textContent = mensaje;
+        }
+
+        // Actualizar Recomendación de Resolución
+        const motivoResolucion = document.getElementById('motivoResolucion');
+        const tipoResolucion = document.querySelector('.font-semibold.text-jne-red');
+        
+        if (motivoResolucion) motivoResolucion.textContent = responseData.motivo_resolucion;
+        if (tipoResolucion) tipoResolucion.textContent = responseData.tipo_resolucion;
+    }
+};
+
+// Funciones para el manejo de la generación de resolución
+function mostrarConfirmacionGenerarResolucion() {
+    const modal = document.getElementById('modalConfirmacion');
+    modal.classList.remove('hidden');
+    modal.classList.add('animate-fade-in');
+}
+
+function cerrarModal() {
+    const modal = document.getElementById('modalConfirmacion');
+    modal.classList.add('hidden');
+    modal.classList.remove('animate-fade-in');
+}
+
+function mostrarToastExito() {
+    const toast = document.getElementById('toastExito');
+    toast.classList.remove('hidden');
+    toast.classList.add('animate-slide-in');
+    
+    setTimeout(() => {
+        toast.classList.add('animate-slide-out');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('animate-slide-in', 'animate-slide-out');
+        }, 500);
+    }, 3000);
+}
+
+function mostrarToastError(mensaje) {
+    const toast = document.getElementById('toastError');
+    const mensajeError = document.getElementById('mensajeError');
+    mensajeError.textContent = mensaje;
+    
+    toast.classList.remove('hidden');
+    toast.classList.add('animate-slide-in');
+    
+    setTimeout(() => {
+        toast.classList.add('animate-slide-out');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('animate-slide-in', 'animate-slide-out');
+        }, 500);
+    }, 3000);
+}
+
+async function generarResolucion() {
+    try {
+        const normativasSeleccionadas = NormativaManager.getSelectedNormativas();
+        
+        // Mostrar indicador de carga
+        const botonConfirmar = document.getElementById('btnConfirmarNormativas');
+        botonConfirmar.disabled = true;
+        botonConfirmar.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Generando...
+        `;
+
+        const numeroExpediente = "{{ nombre_expediente }}";
+        
+        if (!numeroExpediente) {
+            throw new Error("No se encontró el número del expediente");
+        }
+
+        const response = await fetch(`/generar_resolucion?nombre_expediente=${encodeURIComponent(numeroExpediente)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                normativas: normativasSeleccionadas
+            })
+        });
+        
+        if (response.ok) {
+            cerrarModalNormativas();
+            mostrarToastExito();
+            setTimeout(() => {
+                window.location.href = '/listado_procesados';
+            }, 1000);
+        } else {
+            const error = await response.json();
+            throw new Error(error.detail || 'Error al generar la resolución');
+        }
+    } catch (error) {
+        console.error('Error en generarResolucion:', error);
+        mostrarToastError(error.message);
+    } finally {
+        const botonConfirmar = document.getElementById('btnConfirmarNormativas');
+        botonConfirmar.disabled = false;
+        botonConfirmar.innerHTML = 'Confirmar y Generar Resolución';
+    }
+}
+
+// Función para mostrar el modal de normativas
+function mostrarModalNormativas() {
+    const modal = document.getElementById('modalNormativas');
+    modal.classList.remove('hidden');
+    modal.classList.add('animate-fade-in');
+}
+
+// Función para cerrar el modal de normativas
+function cerrarModalNormativas() {
+    const modal = document.getElementById('modalNormativas');
+    modal.classList.add('hidden');
+    modal.classList.remove('animate-fade-in');
+}
+
+// Función para manejar la selección de normativas
+function initNormativasTabs() {
+    const tabButtons = document.querySelectorAll('#normativas-tabs button');
     const tabContents = document.querySelectorAll('[role="tabpanel"]');
 
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const target = document.querySelector(button.dataset.tabsTarget);
-            
-            tabContents.forEach(content => {
-                content.classList.add('hidden');
-            });
-            
+
+            tabContents.forEach(content => content.classList.add('hidden'));
             tabButtons.forEach(btn => {
-                btn.classList.remove('text-jne-red', 'border-jne-red');
+                btn.classList.remove('text-jne-red', 'border-jne-red', 'active');
                 btn.classList.add('text-gray-500', 'border-transparent');
-                btn.setAttribute('aria-selected', false);
+                btn.setAttribute('aria-selected', 'false');
             });
-            
+
             button.classList.remove('text-gray-500', 'border-transparent');
-            button.classList.add('text-jne-red', 'border-jne-red');
-            button.setAttribute('aria-selected', true);
-            
+            button.classList.add('text-jne-red', 'border-jne-red', 'active');
+            button.setAttribute('aria-selected', 'true');
+
             target.classList.remove('hidden');
         });
     });
+}
+
+// Función para manejar la selección de normativas y artículos
+function initNormativasCheckboxes() {
+    // Manejar selección de normativa completa
+    document.querySelectorAll('input[data-tipo="ley"], input[data-tipo="reglamento"]').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const normativaId = e.target.dataset.normativaId;
+            const isChecked = e.target.checked;
+            
+            // Seleccionar/deseleccionar todos los artículos de esta normativa
+            document.querySelectorAll(`input[data-normativa-id="${normativaId}"]`).forEach(artCheckbox => {
+                artCheckbox.checked = isChecked;
+            });
+        });
+    });
+
+    // Manejar selección de artículos individuales
+    document.querySelectorAll('input[data-articulo-id]').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const normativaId = e.target.dataset.normativaId;
+            const normativaCheckbox = document.querySelector(`input[data-normativa-id="${normativaId}"][data-tipo]`);
+            
+            // Verificar si todos los artículos están seleccionados
+            const articulos = document.querySelectorAll(`input[data-normativa-id="${normativaId}"][data-articulo-id]`);
+            const todosSeleccionados = Array.from(articulos).every(art => art.checked);
+            
+            normativaCheckbox.checked = todosSeleccionados;
+        });
+    });
+}
+
+// Función para obtener las normativas seleccionadas
+function obtenerNormativasSeleccionadas() {
+    const normativasSeleccionadas = {
+        leyes: [],
+        reglamentos: []
+    };
+
+    // Obtener leyes seleccionadas
+    document.querySelectorAll('input[data-tipo="ley"]:checked').forEach(checkbox => {
+        const normativaId = checkbox.dataset.normativaId;
+        const articulos = Array.from(document.querySelectorAll(`input[data-normativa-id="${normativaId}"][data-articulo-id]:checked`))
+            .map(art => art.dataset.articuloId);
+        
+        normativasSeleccionadas.leyes.push({
+            nombre: normativaId,
+            articulos: articulos
+        });
+    });
+
+    // Obtener reglamentos seleccionados
+    document.querySelectorAll('input[data-tipo="reglamento"]:checked').forEach(checkbox => {
+        const normativaId = checkbox.dataset.normativaId;
+        const articulos = Array.from(document.querySelectorAll(`input[data-normativa-id="${normativaId}"][data-articulo-id]:checked`))
+            .map(art => art.dataset.articuloId);
+        
+        normativasSeleccionadas.reglamentos.push({
+            nombre: normativaId,
+            articulos: articulos
+        });
+    });
+
+    return normativasSeleccionadas;
+}
+
+// Inicialización cuando el documento está listo
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Documento cargado, inicializando componentes...');
+    
+    // Inicializar tabs y accordions
+    initTabs();
+    initAccordions();
+
+    // Inicializar tabs y checkboxes de normativas
+    initNormativasTabs();
+    initNormativasCheckboxes();
+
+    // Asignar eventos a los botones
+    const btnGenerarResolucion = document.getElementById('btnGenerarResolucion');
+    const btnCancelar = document.getElementById('btnCancelar');
+    const btnConfirmar = document.getElementById('btnConfirmar');
+    const btnVerInforme = document.getElementById('btnVerInforme');
+    const btnCerrarInforme = document.getElementById('btnCerrarInforme');
+    const btnDescargarInforme = document.getElementById('btnDescargarInforme');
+    const btnCerrarNormativas = document.getElementById('btnCerrarNormativas');
+    const btnCancelarNormativas = document.getElementById('btnCancelarNormativas');
+    const btnConfirmarNormativas = document.getElementById('btnConfirmarNormativas');
+
+    console.log('Botones encontrados:', {
+        btnGenerarResolucion: !!btnGenerarResolucion,
+        btnCancelar: !!btnCancelar,
+        btnConfirmar: !!btnConfirmar,
+        btnVerInforme: !!btnVerInforme,
+        btnCerrarInforme: !!btnCerrarInforme,
+        btnDescargarInforme: !!btnDescargarInforme,
+        btnCerrarNormativas: !!btnCerrarNormativas,
+        btnCancelarNormativas: !!btnCancelarNormativas,
+        btnConfirmarNormativas: !!btnConfirmarNormativas
+    });
+
+    if (btnGenerarResolucion) {
+        btnGenerarResolucion.addEventListener('click', mostrarModalNormativas);
+    }
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', cerrarModal);
+    }
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', () => {
+            console.log('Botón confirmar clickeado');
+            generarResolucion();
+        });
+    }
+    if (btnVerInforme) {
+        btnVerInforme.addEventListener('click', () => {
+            console.log('Botón ver informe clickeado');
+            mostrarModalInforme();
+        });
+    }
+    if (btnCerrarInforme) {
+        btnCerrarInforme.addEventListener('click', cerrarModalInforme);
+    }
+    if (btnDescargarInforme) {
+        btnDescargarInforme.addEventListener('click', () => {
+            console.log('Botón descargar informe clickeado');
+            generarPDF();
+        });
+    }
+    if (btnCerrarNormativas) {
+        btnCerrarNormativas.addEventListener('click', cerrarModalNormativas);
+    }
+    if (btnCancelarNormativas) {
+        btnCancelarNormativas.addEventListener('click', cerrarModalNormativas);
+    }
+    if (btnConfirmarNormativas) {
+        btnConfirmarNormativas.addEventListener('click', generarResolucion);
+    }
+});
+
+function mostrarModalInforme() {
+    const modal = document.getElementById('modalInforme');
+    modal.classList.remove('hidden');
+    modal.classList.add('animate-fade-in');
+}
+
+function cerrarModalInforme() {
+    const modal = document.getElementById('modalInforme');
+    modal.classList.add('hidden');
+    modal.classList.remove('animate-fade-in');
+}
+
+async function generarPDF() {
+    try {
+        // Mostrar indicador de carga
+        const btnDescargar = document.getElementById('btnDescargarInforme');
+        const originalContent = btnDescargar.innerHTML;
+        btnDescargar.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Generando PDF...
+        `;
+
+        // Obtener el contenido del modal
+        const modal = document.getElementById('modalInforme');
+        const content = modal.querySelector('.relative');
+
+        // Crear un contenedor temporal para el PDF
+        const tempContainer = document.createElement('div');
+        tempContainer.style.width = '210mm'; // Ancho A4
+        tempContainer.style.padding = '20mm';
+        tempContainer.style.backgroundColor = '#ffffff';
+        
+        // Clonar el contenido
+        const contentClone = content.cloneNode(true);
+        
+        // Ajustar estilos del contenido clonado
+        const allElements = contentClone.querySelectorAll('*');
+        allElements.forEach(el => {
+            if (el.style) {
+                el.style.maxHeight = 'none';
+                el.style.height = 'auto';
+                el.style.overflow = 'visible';
+                el.style.pageBreakInside = 'avoid';
+            }
+        });
+
+        // Ajustar contenedores específicos
+        const containers = contentClone.querySelectorAll('.max-w-5xl, .max-w-4xl, .max-w-7xl');
+        containers.forEach(container => {
+            container.style.maxWidth = '100%';
+            container.style.width = '100%';
+        });
+
+        // Agregar el contenido clonado al contenedor temporal
+        tempContainer.appendChild(contentClone);
+        document.body.appendChild(tempContainer);
+
+        // Configuración para html2pdf
+        const opt = {
+            margin: 0,
+            filename: `informe_{{ nombre_expediente }}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                scrollY: 0,
+                windowHeight: tempContainer.scrollHeight,
+                height: tempContainer.scrollHeight,
+                onclone: function(clonedDoc) {
+                    const elements = clonedDoc.querySelectorAll('*');
+                    elements.forEach(el => {
+                        if (el.style) {
+                            el.style.overflow = 'visible';
+                            el.style.height = 'auto';
+                            el.style.maxHeight = 'none';
+                            el.style.pageBreakInside = 'avoid';
+                        }
+                    });
+                }
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait',
+                compress: true
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        // Generar el PDF
+        await html2pdf().set(opt).from(tempContainer).save();
+        
+        // Limpiar
+        document.body.removeChild(tempContainer);
+        
+        // Restaurar el botón
+        btnDescargar.innerHTML = originalContent;
+    } catch (error) {
+        console.error('Error al generar el PDF:', error);
+        mostrarToastError('Error al generar el PDF');
+    }
+}
+
+function abrirModalEditarRequisito(nombre, estado, observacion, id_estado_requisito) {
+    const modal = document.getElementById('modalEditarRequisito');
+    const nombreRequisito = document.getElementById('nombreRequisito');
+    const estadoRequisito = document.getElementById('estadoRequisito');
+    const observacionRequisito = document.getElementById('observacionRequisito');
+    const idEstadoRequisito = document.getElementById('id_estado_requisito');
+    
+    // Si hay cambios temporales, usarlos
+    if (RequisitoManager.cambiosTemporales.has(id_estado_requisito)) {
+        const cambios = RequisitoManager.cambiosTemporales.get(id_estado_requisito);
+        estadoRequisito.value = cambios.estado;
+        observacionRequisito.value = cambios.observacion || '';
+    } else {
+        estadoRequisito.value = estado;
+        observacionRequisito.value = observacion || '';
+    }
+    
+    nombreRequisito.textContent = nombre;
+    idEstadoRequisito.value = id_estado_requisito;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('animate-fade-in');
+}
+
+function cerrarModalEditarRequisito() {
+    const modal = document.getElementById('modalEditarRequisito');
+    modal.classList.add('hidden');
+    modal.classList.remove('animate-fade-in');
+}
+
+function mostrarToastExitoEdicion() {
+    const toast = document.getElementById('toastExitoEdicion');
+    toast.classList.remove('hidden');
+    toast.classList.add('animate-slide-in');
+    
+    setTimeout(() => {
+        toast.classList.add('animate-slide-out');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('animate-slide-in', 'animate-slide-out');
+        }, 500);
+    }, 3000);
+}
+
+function mostrarToastErrorEdicion(mensaje) {
+    const toast = document.getElementById('toastErrorEdicion');
+    const mensajeError = document.getElementById('mensajeErrorEdicion');
+    mensajeError.textContent = mensaje;
+    
+    toast.classList.remove('hidden');
+    toast.classList.add('animate-slide-in');
+    
+    setTimeout(() => {
+        toast.classList.add('animate-slide-out');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('animate-slide-in', 'animate-slide-out');
+        }, 500);
+    }, 3000);
+}
+
+// Inicialización cuando el documento está listo
+document.addEventListener('DOMContentLoaded', () => {
+    // ... existing code ...
+    
+    // Agregar eventos para el modal de edición de requisito
+    const btnCerrarEditarRequisito = document.getElementById('btnCerrarEditarRequisito');
+    const btnCancelarEditarRequisito = document.getElementById('btnCancelarEditarRequisito');
+    const formEditarRequisito = document.getElementById('formEditarRequisito');
+    
+    if (btnCerrarEditarRequisito) {
+        btnCerrarEditarRequisito.addEventListener('click', cerrarModalEditarRequisito);
+    }
+    
+    if (btnCancelarEditarRequisito) {
+        btnCancelarEditarRequisito.addEventListener('click', cerrarModalEditarRequisito);
+    }
+    
+    if (formEditarRequisito) {
+        formEditarRequisito.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(formEditarRequisito);
+            const id_estado_requisito = formData.get('id_estado_requisito');
+            const estado = formData.get('estado');
+            const observacion = formData.get('observacion');
+            
+            // Guardar cambios temporalmente
+            RequisitoManager.cambiosTemporales.set(id_estado_requisito, {
+                estado: estado,
+                observacion: observacion
+            });
+            
+            // Actualizar la vista
+            const requisitoElement = document.querySelector(`[data-requisito-id="${id_estado_requisito}"]`);
+            if (requisitoElement) {
+                const estadoBadge = requisitoElement.querySelector('.text-xs');
+                let estadoColor, estadoTexto;
+                
+                if (estado === 'CUMPLE') {
+                    estadoColor = 'green';
+                    estadoTexto = 'Cumple';
+                } else if (estado === 'NO_CUMPLE') {
+                    estadoColor = 'red';
+                    estadoTexto = 'No Cumple';
+                } else if (estado === 'ALERTA') {
+                    estadoColor = 'amber';
+                    estadoTexto = 'Alerta';
+                }
+                
+                estadoBadge.className = `text-xs bg-${estadoColor}-100 text-${estadoColor}-800 px-2 py-1 rounded-full`;
+                estadoBadge.textContent = estadoTexto;
+                
+                // Actualizar observación si existe
+                const observacionElement = requisitoElement.querySelector(`.bg-${estadoColor}-100`);
+                if (observacionElement && observacion) {
+                    observacionElement.innerHTML = `<p><strong>Observación:</strong> ${observacion}</p>`;
+                }
+            }
+            
+            cerrarModalEditarRequisito();
+            mostrarToastExitoEdicion();
+        });
+    }
+});
+
+// Inicialización cuando el documento está listo
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Agregar evento para el botón de habilitar edición
+    const btnHabilitarEdicion = document.getElementById('btnHabilitarEdicion');
+    const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+    
+    if (btnHabilitarEdicion) {
+        btnHabilitarEdicion.addEventListener('click', () => {
+            if (RequisitoManager.modoEdicion) {
+                RequisitoManager.guardarCambios();
+            } else {
+                // Guardar estados originales antes de habilitar edición
+                document.querySelectorAll('[data-requisito-id]').forEach(element => {
+                    const id = element.getAttribute('data-requisito-id');
+                    const estadoBadge = element.querySelector('.text-xs');
+                    const observacionElement = element.querySelector('[class*="bg-"]');
+                    
+                    element.setAttribute('data-estado-original', estadoBadge.textContent.trim());
+                    if (observacionElement) {
+                        element.setAttribute('data-observacion-original', observacionElement.textContent.replace('Observación:', '').trim());
+                    }
+                });
+                
+                RequisitoManager.modoEdicion = true;
+                RequisitoManager.actualizarInterfazEdicion();
+            }
+        });
+    }
+    
+    if (btnCancelarEdicion) {
+        btnCancelarEdicion.addEventListener('click', () => {
+            RequisitoManager.cambiosTemporales.clear();
+            RequisitoManager.modoEdicion = false;
+            RequisitoManager.actualizarInterfazEdicion();
+        });
+    }
+    
+    // Inicializar la interfaz
+    RequisitoManager.actualizarInterfazEdicion();
+});
+
 </script>
 
 {% endblock %}
+

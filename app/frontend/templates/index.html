@@ -73,12 +73,12 @@
                         <label for="tipo_expediente" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Expediente</label>
                         <select 
                             id="tipo_expediente"
-                            name = "tipo_expediente" 
+                            name="tipo_expediente" 
                             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
                         >
                             <option value="">Seleccione un tipo</option>
                             <option value="2">Acta Electoral</option>
-                            <option value="1">Inscripción de Lista</option>
+                            <option value="1" selected>Inscripción de Lista</option>
                             <option value="3">Publicidad Estatal</option>
                             <option value="4">Propaganda Electoral</option>
                             <option value="5">Nulidad Electoral</option>
@@ -88,15 +88,15 @@
                         <label for="tipo_materia" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Materia</label>
                         <select 
                             id="tipo_materia"
-                            name = "tipo_materia" 
+                            name="tipo_materia" 
                             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-jne-red focus:border-jne-red outline-none"
                         >
                             <option value="">Seleccione un tipo</option>
-                            <option value="2">Apelación</option>
-                            <option value="1">Solicitud Inscripción de Lista</option>
-                            <option value="3">Nulidad</option>
-                            <option value="4">Tacha</option>
-                            <option value="5">Vacancia</option>
+                            <option value="1">Apelación</option>
+                            <option value="5" selected>Solicitud Inscripción de Lista</option>
+                            <option value="2">Nulidad</option>
+                            <option value="3">Tacha</option>
+                            <option value="4">Vacancia</option>
                         </select>
                     </div>
                 </div>
@@ -119,10 +119,10 @@
             </form>
         </div>
 
-        <!-- Sección de resultado del análisis (inicialmente oculta) -->
+        <!-- resultado del análisis -->
         <div id="resultadoAnalisis" class="{% if not analisis_realizado %}hidden{% endif %}">
             {% block resultado_analisis %}
-            <!-- Esta sección será reemplazada por cada tipo de proceso -->
+            <!-- aqui van los resultados del análisis dependiendo del tipo de proceso -->
             {% endblock %}
         </div>
     </main>
@@ -141,9 +141,54 @@
             </div>
         </div>
     </footer>
+
+    {% block scripts %}
     <script>
-
+    function initTabs() {
+        const tabButtons = document.querySelectorAll('[data-tabs-target]');
+        const tabContents = document.querySelectorAll('[role="tabpanel"]');
+    
+        if (!tabButtons.length) return;
+    
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const target = document.querySelector(button.dataset.tabsTarget);
+    
+                tabContents.forEach(c => c.classList.add('hidden'));
+    
+                tabButtons.forEach(b => {
+                    b.classList.remove('text-jne-red', 'border-jne-red', 'active');
+                    b.classList.add('text-gray-500', 'border-transparent');
+                    b.setAttribute('aria-selected', 'false');
+                });
+    
+                button.classList.remove('text-gray-500', 'border-transparent');
+                button.classList.add('text-jne-red', 'border-jne-red', 'active');
+                button.setAttribute('aria-selected', 'true');
+    
+                target.classList.remove('hidden');
+            });
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const expedienteForm = document.getElementById('expedienteForm');
+        const btnAnalizar = document.getElementById('btnAnalizar');
+        const spinner = document.getElementById('spinner');
+        
+        // Mostrar el spinner al enviar el formulario
+        expedienteForm?.addEventListener('submit', function(e) {
+            // Mostrar spinner
+            spinner?.classList.remove('hidden');
+            btnAnalizar.disabled = true;
+            
+            // Permitir que el formulario se envíe normalmente
+            // El navegador se redirigirá a /analiza_expediente después de enviar
+        });
+        
+        initTabs();
+    });
     </script>
-
+    {% endblock %}
 </body>
 </html>
